@@ -106,16 +106,28 @@ public List<ContratoDTO> obtenerContratos(FiltrosContratos filtrosContratos){
                 return new ArrayList<>();
             }
 
+
+            Expression<Integer> diferenciaAños = cb.diff(
+                    cb.function("YEAR", Integer.class, root.get("fechaFin")),
+                    cb.function("YEAR", Integer.class, root.get("fechaInicio"))
+            );
+
+            Expression<Integer> diferenciaMeses = cb.diff(
+                    cb.function("MONTH", Integer.class, root.get("fechaFin")),
+                    cb.function("MONTH", Integer.class, root.get("fechaInicio"))
+            );
+
+            Expression<Integer> totalDiferenciaMeses = cb.sum(
+                    cb.prod(diferenciaAños, cb.literal(12)),
+                    diferenciaMeses
+            );
+
             cq.multiselect(
                     root.get("tipoServicio"),
                     cb.count(root.get("id")),
                     cb.sum(
                             cb.prod(
-                                    root.get("tarifaMensual"),
-                                    cb.diff(
-                                            cb.function("MONTH", Integer.class, root.get("fechaFin")),
-                                            cb.function("MONTH", Integer.class, root.get("fechaInicio"))
-                                    )
+                                    root.get("tarifaMensual"),totalDiferenciaMeses
                             )
                     )
             ).where(cb.equal(root.get("estado"),enums.estado.CANCELADO)).groupBy(root.get("tipoServicio"));
@@ -140,16 +152,24 @@ public List<ContratoDTO> obtenerContratos(FiltrosContratos filtrosContratos){
             Root<Contrato> root = cq.from(Contrato.class);
             Join<Contrato,Pago> join = root.join("pagos" , JoinType.LEFT);
 
-            Expression<Long> diferenciaMeses = cb.toLong(
-                    cb.diff(
-                            cb.function("MONTH",Integer.class,root.get("fechaInicio")),
-                            cb.function("MONTH", Integer.class, root.get("fechaFin"))
-                    )
+            Expression<Integer> diferenciaAños = cb.diff(
+                    cb.function("YEAR", Integer.class, root.get("fechaFin")),
+                    cb.function("YEAR", Integer.class, root.get("fechaInicio"))
+            );
+
+            Expression<Integer> diferenciaMeses = cb.diff(
+                    cb.function("MONTH", Integer.class, root.get("fechaFin")),
+                    cb.function("MONTH", Integer.class, root.get("fechaInicio"))
+            );
+
+            Expression<Integer> totalDiferenciaMeses = cb.sum(
+                    cb.prod(diferenciaAños, cb.literal(12)),
+                    diferenciaMeses
             );
 
 
             cq.multiselect(
-                    cb.prod(root.get("tarifaMensual"), diferenciaMeses),
+                    cb.prod(root.get("tarifaMensual"), totalDiferenciaMeses),
                     cb.sum(join.get("monto")),
                     root.get("id")
 

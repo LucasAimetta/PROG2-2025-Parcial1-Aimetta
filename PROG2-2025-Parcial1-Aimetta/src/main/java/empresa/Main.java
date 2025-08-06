@@ -2,6 +2,7 @@ package empresa;
 
 import empresa.dto.FiltrosContratos;
 import empresa.dto.ResumenContratosCancelados;
+import empresa.dto.ResumenContratosNoCancelados;
 import empresa.service.Logica;
 
 import java.time.LocalDate;
