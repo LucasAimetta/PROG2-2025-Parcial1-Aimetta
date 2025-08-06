@@ -6,7 +6,6 @@ import empresa.model.Pago;
 import empresa.utils.HibernateUtil;
 import empresa.utils.enums;
 import jakarta.persistence.criteria.*;
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 
 import java.time.LocalDate;
@@ -25,7 +24,7 @@ public class Logica {
         return instance;
     }
 
-    public ResultadoNuevoPago registrarPago(nuevoPago nuevoPago){
+    public ResultadoNuevoPago registrarPago(NuevoPago nuevoPago){
     try (Session session = HibernateUtil.getSession()){
         session.beginTransaction();
         Contrato contrato = session.get(Contrato.class,nuevoPago.getIdContrato());
@@ -106,18 +105,19 @@ public List<ContratoDTO> obtenerContratos(FiltrosContratos filtrosContratos){
             {
                 return new ArrayList<>();
             }
-            Expression<Long> diferenciaMeses = cb.toLong(
-                    cb.diff(
-                            cb.function("MONTH",Integer.class,root.get("fechaInicio")),
-                            cb.function("MONTH", Integer.class, root.get("fechaFin"))
-                    )
-            );
-
 
             cq.multiselect(
                     root.get("tipoServicio"),
                     cb.count(root.get("id")),
-                    cb.prod(root.get("tarifaMensual"), diferenciaMeses)
+                    cb.sum(
+                            cb.prod(
+                                    root.get("tarifaMensual"),
+                                    cb.diff(
+                                            cb.function("MONTH", Integer.class, root.get("fechaFin")),
+                                            cb.function("MONTH", Integer.class, root.get("fechaInicio"))
+                                    )
+                            )
+                    )
             ).where(cb.equal(root.get("estado"),enums.estado.CANCELADO)).groupBy(root.get("tipoServicio"));
 
             List<Object[]> resultado = session.createQuery(cq).list();

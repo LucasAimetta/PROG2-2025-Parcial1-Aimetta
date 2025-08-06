@@ -1,15 +1,15 @@
 package empresa.dto;
 
-public class nuevoPago {
+public class NuevoPago {
     private int idContrato;
     private double amount;
 
-    public nuevoPago(int idContrato, double amount) {
+    public NuevoPago(int idContrato, double amount) {
         this.idContrato = idContrato;
         this.amount = amount;
     }
 
-    public nuevoPago() {
+    public NuevoPago() {
     }
 
     public int getIdContrato() {
